@@ -63,8 +63,6 @@ while True:
 
             client.send(sendMsg)
         case b'/post':
-            form = cgi.FieldStorage()
-
             sendMsg = b"HTTP/1.1 200 OK" + CRLF
             sendMsg += b"Content-Type: text/html" + CRLF
             sendMsg += CRLF
