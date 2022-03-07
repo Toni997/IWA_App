@@ -2,7 +2,6 @@ import cgi
 import socket
 from io import BytesIO
 import http.cookies
-#from requests_toolbelt.multipart import decoder
 
 
 class HttpRequest:
