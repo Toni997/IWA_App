@@ -1,6 +1,8 @@
+import cgi
 import socket
+from io import BytesIO
 import http.cookies
-from requests_toolbelt.multipart import decoder
+#from requests_toolbelt.multipart import decoder
 
 
 class HttpRequest:
@@ -17,9 +19,11 @@ class HttpRequest:
         if not content_type:
             return
         if content_type.find(b'multipart/form-data') != -1:
-            decoded = decoder.MultipartDecoder(self.body, content_type.decode('utf-8'))
-
-            print()
+            fp = BytesIO(self.body)
+            pdict = dict()
+            pdict['boundary'] = self.get_multipart_boundary()
+            form = cgi.parse_multipart(fp=fp, pdict=pdict)
+            print(form)
 
     def __receive_all(self):
         # assuming header is not longer than 2048 bytes (fix later?)

@@ -6,7 +6,7 @@ import os
 import HttpRequest
 
 HOST = '127.0.0.1'
-PORT = 8080
+PORT = 8090
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
