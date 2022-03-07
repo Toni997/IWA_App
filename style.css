@@ -1,0 +1,24 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    font-size: 1.2rem;
+}
+
+.container {
+    max-width: 1075px;
+    margin: 0 auto;
+    padding: 15px;
+}
+
+form {
+    /* display: flex;
+    flex-direction: column; */
+}
+
+form > * {
+    display: block;
+    padding: 5px;
+    margin-bottom: 15px;
+}

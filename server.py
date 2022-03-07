@@ -1,5 +1,7 @@
+import cgi
 import socket
-# import threading
+import threading
+import os
 
 import HttpRequest
 
@@ -17,30 +19,57 @@ while True:
     client, address = server.accept()
     print(f"Connected to client: {address}\n\n")
 
-    request = client.recv(1024)
-    req = HttpRequest.HttpRequest(request)
-
-    contentLength = req.get_content_length()
-    leftToReceive = contentLength - req.get_body_len()
-    print("left to receive: ", leftToReceive)
-    while leftToReceive > 0:
-        chunk = client.recv(1024)
-        req.concatenate_body(chunk)
-        leftToReceive = contentLength - req.get_body_len()
+    req = HttpRequest.HttpRequest(client)
 
     path = req.get_path()
-
     match path:
         case b'/favicon.ico':
-            faviconFile = open("favicon.ico", "rb")
-            faviconBinary = faviconFile.read()
-            faviconFile.close()
-
+            with open("favicon.ico", "rb") as file:
+                fileContents = file.read()
             sendMsg = b"HTTP/1.1 200 OK" + CRLF
             sendMsg += b"Content-Type: image/x-icon" + CRLF
             sendMsg += CRLF
-            sendMsg += faviconBinary
+            sendMsg += fileContents
 
+            client.send(sendMsg)
+        case b'/style.css':
+            with open("style.css", "rb") as file:
+                fileContents = file.read()
+
+            sendMsg = b"HTTP/1.1 200 OK" + CRLF
+            sendMsg += b"Content-Type: text/css" + CRLF
+            sendMsg += CRLF
+            sendMsg += fileContents
+
+            client.send(sendMsg)
+        case b'/script.js':
+            with open("script.js", "rb") as file:
+                fileContents = file.read()
+
+            sendMsg = b"HTTP/1.1 200 OK" + CRLF
+            sendMsg += b"Content-Type: text/javascript" + CRLF
+            sendMsg += CRLF
+            sendMsg += fileContents
+
+            client.send(sendMsg)
+        case b'/':
+            with open("main.html", "rb") as file:
+                fileContents = file.read()
+            sendMsg = b"HTTP/1.1 200 OK" + CRLF
+            sendMsg += b"Content-Type: text/html" + CRLF
+            sendMsg += b"Set-Cookie: sessId=1234; HttpOnly" + CRLF
+            sendMsg += b"Set-Cookie: seen=image" + CRLF
+            sendMsg += CRLF
+            sendMsg += fileContents
+
+            client.send(sendMsg)
+        case b'/post':
+            form = cgi.FieldStorage()
+
+            sendMsg = b"HTTP/1.1 200 OK" + CRLF
+            sendMsg += b"Content-Type: text/html" + CRLF
+            sendMsg += CRLF
+            sendMsg += b"<h1> success </h1>"
             client.send(sendMsg)
         case b'/brad-pitt':
             imageFile = open("brad-pitt.jpg", "rb")
@@ -53,17 +82,23 @@ while True:
             sendMsg += imageBinary
 
             client.send(sendMsg)
-        case b'/post':
+        case b'/404.png':
+            imageFile = open("404.png", "rb")
+            imageBinary = imageFile.read()
+            imageFile.close()
+
             sendMsg = b"HTTP/1.1 200 OK" + CRLF
+            sendMsg += b"Content-Type: image/jpeg" + CRLF
             sendMsg += CRLF
-            sendMsg += b"<h1>" + b'\n'.join(req.get_body().split(req.get_multipart_boundary())) + b"</h1>"
+            sendMsg += imageBinary
+
             client.send(sendMsg)
         case _:
             sendMsg = b"HTTP/1.1 404 Not Found" + CRLF
             sendMsg += b"Content-Type: text/html" + CRLF
             sendMsg += CRLF
 
-            file = open("form.html", "rb")
+            file = open("404.html", "rb")
             fileContents = file.read()
             file.close()
 
