@@ -1,4 +1,3 @@
-import cgi
 import socket
 import threading
 import os
