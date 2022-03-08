@@ -11,29 +11,38 @@
           crossorigin="anonymous" defer>
     </script>
     <script src="script.js" defer></script>
-    <title>IWA</title>
+    <title>IWA App</title>
 </head>
 <body>
     <div class="container">
-        <form id="add-image-form" method="POST" action="/post" enctype="multipart/form-data">
+        <h1>IWA App</h1>
+        <hr />
+        <h2>Images</h2>
+        <form id="add-image-form" method="POST" action="/image/add" enctype="multipart/form-data">
             <select class="collection" id="collection" name="selected-collection">
                 <option value="" selected disabled hidden>Choose collection</option>
-                <option value="1">cards</option>
-                <option value="2">cars</option>
-                <option value="3">celebrities</option>
-                <option value="4">animals</option>
-                <option value="5">tech</option>
+                {% for loop - collections %}
+                <option value="{{ collection_id }}">{{ name }}</option>
+                {% end for %}
             </select>
             Selected: <span id="selected-collection"></span>
-
-            <label for="collection-name">New collection: </label>
-            <input type="text" name="collection-name" id="collection-name">
 
             <label for="fimg">Slika: </label>
             <input type="file" name="fimg" id="fimg">
 
-            <input type="submit" value="OK">
+            <input type="submit" value="Upload">
         </form>
+
+        <hr />
+        <h2>Create new collection</h2>
+        <form id="add-collection-form" method="POST" action="/collection/add" enctype="multipart/form-data">
+            <label for="collection-name">Name: </label>
+            <input type="text" name="collection-name" id="collection-name">
+
+            <input type="submit" value="Create">
+        </form>
+        <hr />
+        <p class="copyright">Copyright &copy; 2022 Toni Kazinoti</p>
     </div>
 </body>
 </html>

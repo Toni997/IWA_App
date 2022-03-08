@@ -3,6 +3,7 @@ import threading
 import os
 
 import HttpRequest
+import views
 
 HOST = '127.0.0.1'
 PORT = 8090
@@ -14,92 +15,37 @@ server.listen(5)
 
 CRLF = b"\r\n"
 
+
+def handle_request(c: socket):
+    req = HttpRequest.HttpRequest(c)
+
+    match req.get_path():
+        case b'/favicon.ico':
+            views.get_favicon(c)
+        case b'/style.css':
+            views.get_style(c)
+        case b'/script.js':
+            views.get_javascript(c)
+        case b'/':
+            views.get_home_page(c, req.get_cookies())
+        case b'/image/add':
+            views.post_image(c)
+        case b'/collection/add':
+            multipart_data = req.get_multipart_data()
+            name = multipart_data.get('collection-name')[0]
+            views.post_collection(c, name)
+        case b'/404.png':
+            views.get_error_image(c)
+        case _:
+            views.get_error_page(c)
+
+
 while True:
     client, address = server.accept()
-    print(f"Connected to client: {address}\n\n")
+    print(f'Connected to client: {address}')
 
-    req = HttpRequest.HttpRequest(client)
-
-    path = req.get_path()
-    match path:
-        case b'/favicon.ico':
-            with open("favicon.ico", "rb") as file:
-                fileContents = file.read()
-            sendMsg = b"HTTP/1.1 200 OK" + CRLF
-            sendMsg += b"Content-Type: image/x-icon" + CRLF
-            sendMsg += CRLF
-            sendMsg += fileContents
-
-            client.send(sendMsg)
-        case b'/style.css':
-            with open("style.css", "rb") as file:
-                fileContents = file.read()
-
-            sendMsg = b"HTTP/1.1 200 OK" + CRLF
-            sendMsg += b"Content-Type: text/css" + CRLF
-            sendMsg += CRLF
-            sendMsg += fileContents
-
-            client.send(sendMsg)
-        case b'/script.js':
-            with open("script.js", "rb") as file:
-                fileContents = file.read()
-
-            sendMsg = b"HTTP/1.1 200 OK" + CRLF
-            sendMsg += b"Content-Type: text/javascript" + CRLF
-            sendMsg += CRLF
-            sendMsg += fileContents
-
-            client.send(sendMsg)
-        case b'/':
-            with open("main.html", "rb") as file:
-                fileContents = file.read()
-            sendMsg = b"HTTP/1.1 200 OK" + CRLF
-            sendMsg += b"Content-Type: text/html" + CRLF
-            sendMsg += b"Set-Cookie: sessId=1234; HttpOnly" + CRLF
-            sendMsg += b"Set-Cookie: seen=image" + CRLF
-            sendMsg += CRLF
-            sendMsg += fileContents
-
-            client.send(sendMsg)
-        case b'/post':
-            sendMsg = b"HTTP/1.1 200 OK" + CRLF
-            sendMsg += b"Content-Type: text/html" + CRLF
-            sendMsg += CRLF
-            sendMsg += b"<h1> success </h1>"
-            client.send(sendMsg)
-        case b'/brad-pitt':
-            imageFile = open("brad-pitt.jpg", "rb")
-            imageBinary = imageFile.read()
-            imageFile.close()
-
-            sendMsg = b"HTTP/1.1 200 OK" + CRLF
-            sendMsg += b"Content-Type: image/jpeg" + CRLF
-            sendMsg += CRLF
-            sendMsg += imageBinary
-
-            client.send(sendMsg)
-        case b'/404.png':
-            imageFile = open("404.png", "rb")
-            imageBinary = imageFile.read()
-            imageFile.close()
-
-            sendMsg = b"HTTP/1.1 200 OK" + CRLF
-            sendMsg += b"Content-Type: image/jpeg" + CRLF
-            sendMsg += CRLF
-            sendMsg += imageBinary
-
-            client.send(sendMsg)
-        case _:
-            sendMsg = b"HTTP/1.1 404 Not Found" + CRLF
-            sendMsg += b"Content-Type: text/html" + CRLF
-            sendMsg += CRLF
-
-            file = open("404.html", "rb")
-            fileContents = file.read()
-            file.close()
-
-            sendMsg += fileContents
-            client.send(sendMsg)
+    handle_request(client)
 
     client.close()
+
+
