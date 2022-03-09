@@ -64,7 +64,7 @@ class TemplateEngine:
         lines_to_add = list()
         file_name_begin = include_statement.find(b'include ')+8
         file_name_end = include_statement.find(b' %}')
-        file_name = b'./templates/' + include_statement[file_name_begin:file_name_end]
+        file_name = b'templates/' + include_statement[file_name_begin:file_name_end]
         with open(file_name, 'rb') as file:
             for line in file:
                 lines_to_add.append(line)

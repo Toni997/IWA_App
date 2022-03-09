@@ -12,6 +12,14 @@ body {
     background-color: #eee;
 }
 
+h1 {
+    transition: transform 0.3s;
+}
+
+h1:hover {
+    transform: translateY(-7px);
+}
+
 a {
     text-decoration: none;
     color: inherit;
@@ -56,11 +64,6 @@ h1 {
     max-width: 1075px;
     margin: 0 auto;
     padding: 15px;
-}
-
-form {
-    /* display: flex;
-    flex-direction: column; */
 }
 
 input,

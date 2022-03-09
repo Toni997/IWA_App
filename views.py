@@ -19,33 +19,33 @@ def send_file(client: socket, file_name: str, content_type: bytes,
 
 
 def get_favicon(client: socket) -> None:
-    send_file(client, './static/favicon.ico', b'image/x-icon')
+    send_file(client, 'static/favicon.ico', b'image/x-icon')
 
 
 def get_style(client: socket) -> None:
-    send_file(client, './static/style.css', b'text/css')
+    send_file(client, 'static/style.css', b'text/css')
 
 
 def get_javascript(client: socket) -> None:
-    send_file(client, './static/script.js', b'text/javascript')
+    send_file(client, 'static/script.js', b'text/javascript')
 
 
 def get_error_page(client: socket) -> None:
-    send_file(client, './pages/404.html', b'text/html')
+    send_file(client, 'pages/404.html', b'text/html')
 
 
 def get_error_image(client: socket) -> None:
-    send_file(client, './static/404.png', b'text/jpeg')
+    send_file(client, 'static/404.png', b'text/jpeg')
 
 
 def get_home_page(client: socket, cookies: SimpleCookie) -> None:
     context = dict()
     context['collections'] = db_collections.get_all()
-    send_file(client, './pages/index.html', b'text/html', cookies, context)
+    send_file(client, 'pages/index.html', b'text/html', cookies, context)
 
 
 def get_signup_page(client: socket, cookies: SimpleCookie) -> None:
-    send_file(client, './pages/signup.html', b'text/html', cookies)
+    send_file(client, 'pages/signup.html', b'text/html', cookies)
 
 
 def post_image(client: socket) -> None:
