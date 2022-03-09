@@ -2,7 +2,7 @@ import socket
 import threading
 import os
 
-import HttpRequest
+from HttpRequest import HttpRequest
 import views
 
 HOST = '127.0.0.1'
@@ -17,7 +17,7 @@ CRLF = b"\r\n"
 
 
 def handle_request(c: socket):
-    req = HttpRequest.HttpRequest(c)
+    req = HttpRequest(c)
 
     match req.get_path():
         case b'/favicon.ico':
@@ -28,6 +28,8 @@ def handle_request(c: socket):
             views.get_javascript(c)
         case b'/':
             views.get_home_page(c, req.get_cookies())
+        case b'/signup':
+            views.get_signup_page(c, req.get_cookies())
         case b'/image/add':
             views.post_image(c)
         case b'/collection/add':

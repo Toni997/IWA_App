@@ -1,0 +1,23 @@
+{% include head.html %}
+
+{% include header.html %}
+
+    <div class="container">
+        <h2>Signup</h2>
+        <form id="signup-form" method="POST" action="/signup/post" enctype="multipart/form-data">
+            <label for="email">Username: </label>
+            <input type="text" name="email" id="email">
+
+            <label for="username">Email: </label>
+            <input type="text" name="username" id="username">
+
+            <label for="password">Password: </label>
+            <input type="password" name="password" id="password">
+
+            <label for="repeat-password">Repeat Password: </label>
+            <input type="password" name="repeat-password" id="repeat-password">
+
+            <input type="submit" value="Sign Up">
+        </form>
+    </div>
+{% include footer.html %}

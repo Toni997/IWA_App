@@ -12,6 +12,42 @@ body {
     background-color: #eee;
 }
 
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+nav {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+@media (max-width: 500px) {
+    nav {
+        flex-direction: column;
+    }
+}
+
+nav a {
+    position: relative;
+}
+
+nav a::after {
+    content: '';
+	display: block;
+	position: absolute;
+	bottom: -0.3125rem;
+	width: 0%;
+	background-color: #888;
+	height: .125rem;
+	transition: width 400ms;
+}
+
+nav a:hover::after {
+    width: 100%;
+}
+
 h1 {
     text-align: center;
 }

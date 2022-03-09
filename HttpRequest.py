@@ -62,7 +62,7 @@ class HttpRequest:
     def get_body(self) -> bytes:
         return self.__body
 
-    def get_cookies(self) -> dict | None:
+    def get_cookies(self) -> SimpleCookie | None:
         return self.__cookies
 
     def get_path(self) -> bytes | None:

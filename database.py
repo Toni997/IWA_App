@@ -14,4 +14,4 @@ config = {
 }
 
 db = mysql.connector.connect(**config)
-cursor = db.cursor()
+cursor = db.cursor(dictionary=True)

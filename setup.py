@@ -1,21 +1,21 @@
 import mysql.connector
 from mysql.connector import errorcode
 
-import database
 from database import cursor
-
-DB_NAME = database.DB_NAME
+from database import DB_NAME
 
 TABLES = dict()
 TABLES['users'] = """
 
     CREATE TABLE `users` (
       `user_id` int NOT NULL AUTO_INCREMENT,
+      `email` varchar(320) NOT NULL,
       `username` varchar(45) NOT NULL,
       `password_hash` binary(60) NOT NULL,
       `is_admin` tinyint(1) NOT NULL DEFAULT '0',
       PRIMARY KEY (`user_id`),
-      UNIQUE KEY `username_UNIQUE` (`username`)
+      UNIQUE KEY `username_UNIQUE` (`username`),
+      UNIQUE KEY `email_UNIQUE` (`email`)
     ) ENGINE=InnoDB;
 
     """

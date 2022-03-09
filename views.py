@@ -1,33 +1,20 @@
 import socket
 from http.cookies import SimpleCookie
 
-import sqlCollections
+import db_collections
 from TemplateEngine import TemplateEngine
 
 CRLF = b'\r\n'
 
 
-def send_file(client: socket, file_name: str, content_type: bytes, cookies: SimpleCookie = None) -> None:
-    list_of_collections = [
-        {
-            b'collection_id': b'1',
-            b'name': b'Cars'
-        },
-        {
-            b'collection_id': b'2',
-            b'name': b'Tech'
-        },
-        {
-            b'collection_id': b'3',
-            b'name': b'Animals'
-        },
-    ]
+def send_file(client: socket, file_name: str, content_type: bytes,
+              cookies: SimpleCookie = None, context: dict = None) -> None:
     msg = b'HTTP/1.1 200 OK' + CRLF
     msg += b'Content-Type: ' + content_type + CRLF
     if cookies:
-        msg += cookies + CRLF
+        msg += bytes(cookies) + CRLF
     msg += CRLF
-    msg += bytes(TemplateEngine(file_name, {'collections': list_of_collections}))
+    msg += bytes(TemplateEngine(file_name, context))
     client.send(msg)
 
 
@@ -52,7 +39,13 @@ def get_error_image(client: socket) -> None:
 
 
 def get_home_page(client: socket, cookies: SimpleCookie) -> None:
-    send_file(client, 'main.html', b'text/html', cookies)
+    context = dict()
+    context['collections'] = db_collections.get_all()
+    send_file(client, 'index.html', b'text/html', cookies, context)
+
+
+def get_signup_page(client: socket, cookies: SimpleCookie) -> None:
+    send_file(client, 'signup.html', b'text/html', cookies)
 
 
 def post_image(client: socket) -> None:
@@ -67,7 +60,7 @@ def post_image(client: socket) -> None:
 
 def post_collection(client: socket, name: str) -> None:
     if name.strip():
-        sqlCollections.insert_one(name)
+        db_collections.insert_one(name)
 
     msg = b"HTTP/1.1 302 Found" + CRLF
     msg += b"Content-Type: text/html" + CRLF

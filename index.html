@@ -1,22 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <script
-          src="https://code.jquery.com/jquery-3.6.0.min.js"
-          integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
-          crossorigin="anonymous" defer>
-    </script>
-    <script src="script.js" defer></script>
-    <title>IWA App</title>
-</head>
-<body>
+{% include head.html %}
+
+{% include header.html %}
+
     <div class="container">
-        <h1>IWA App</h1>
-        <hr />
         <h2>Images</h2>
         <form id="add-image-form" method="POST" action="/image/add" enctype="multipart/form-data">
             <select class="collection" id="collection" name="selected-collection">
@@ -28,7 +14,7 @@
             Selected: <span id="selected-collection"></span>
 
             <label for="fimg">Slika: </label>
-            <input type="file" name="fimg" id="fimg">
+            <input type="file" name="fimg" id="fimg" accept="image/*">
 
             <input type="submit" value="Upload">
         </form>
@@ -41,8 +27,5 @@
 
             <input type="submit" value="Create">
         </form>
-        <hr />
-        <p class="copyright">Copyright &copy; 2022 Toni Kazinoti</p>
     </div>
-</body>
-</html>
+{% include footer.html %}
