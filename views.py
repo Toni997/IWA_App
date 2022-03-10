@@ -2,7 +2,7 @@ import socket
 from http.cookies import SimpleCookie
 
 import db_collections
-from TemplateEngine import TemplateEngine
+from template_engine import TemplateEngine
 
 CRLF = b'\r\n'
 

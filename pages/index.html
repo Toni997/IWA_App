@@ -1,14 +1,12 @@
 {% include head.html %}
-
 {% include header.html %}
-
     <div class="container">
         <h2>Images</h2>
         <form id="add-image-form" method="POST" action="/image/add" enctype="multipart/form-data">
             <select class="collection" id="collection" name="selected-collection">
                 <option value="" selected disabled hidden>Choose collection</option>
-                {% for loop - collections %}
-                <option value="{{ collection_id }}">{{ name }}</option>
+                {% for c in collections %}
+                <option value="{{ c.collection_id }}">{{ c.name }}</option>
                 {% end for %}
             </select>
             Selected: <span id="selected-collection"></span>

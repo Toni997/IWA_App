@@ -2,7 +2,7 @@ import socket
 import threading
 import os
 
-from HttpRequest import HttpRequest
+from http_request import HttpRequest
 import views
 
 HOST = '127.0.0.1'
