@@ -1,8 +1,7 @@
 import mysql.connector
 from mysql.connector import errorcode
 
-from database import cursor
-from database import DB_NAME
+from database import cursor, DB_NAME
 
 TABLES = dict()
 TABLES['users'] = """
@@ -11,12 +10,13 @@ TABLES['users'] = """
       `user_id` int NOT NULL AUTO_INCREMENT,
       `email` varchar(320) NOT NULL,
       `username` varchar(45) NOT NULL,
-      `password_hash` binary(60) NOT NULL,
+      `salt` char(64) NOT NULL,
+      `password_hash` char(64) NOT NULL,
       `is_admin` tinyint(1) NOT NULL DEFAULT '0',
       PRIMARY KEY (`user_id`),
       UNIQUE KEY `username_UNIQUE` (`username`),
       UNIQUE KEY `email_UNIQUE` (`email`)
-    ) ENGINE=InnoDB;
+    ) ENGINE=InnoDB
 
     """
 

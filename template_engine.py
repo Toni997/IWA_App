@@ -4,7 +4,7 @@ CRLF = b'\r\n'
 TEMPLATES_DIR = b'templates/'
 
 INCLUDE_PATTERN = rb"{%\sinclude\s([A-Za-z0-9._\-]+)\s%}"
-FOR_LOOP_PATTERN = rb"{%\sfor\s([a-zA-Z0-9]+)\sin\s([a-zA-Z0-9]+)\s%}"
+FOR_BEGIN_PATTERN = rb"{%\sfor\s([a-zA-Z0-9]+)\sin\s([a-zA-Z0-9]+)\s%}"
 END_FOR_PATTERN = rb"{%\send\sfor\s%}"
 VARIABLE_PATTERN = rb"{{\s([A-Za-z0-9_.]+)\s}}"
 
@@ -25,6 +25,7 @@ class TemplateEngine:
             self.__content = file.read()
         self.__handle_includes()
         self.__handle_for_loops()
+        self.__handle_all_vars()
 
     def __handle_includes(self):
         match = re.search(INCLUDE_PATTERN, self.__content)
@@ -40,9 +41,8 @@ class TemplateEngine:
             self.__content = self.__content.replace(replace_what, replace_with)
             match = re.search(INCLUDE_PATTERN, self.__content)
 
-    def __handle_for_loops(self):
-
-        match = re.search(FOR_LOOP_PATTERN, self.__content)
+    def __handle_for_loops(self) -> None:
+        match = re.search(FOR_BEGIN_PATTERN, self.__content)
         while match:
             replace_with_total = b''
             replace_what_begin = match.regs[0][0]
@@ -62,7 +62,6 @@ class TemplateEngine:
     def __handle_loop_vars(self, content: bytes, var_name: str, each: dict) -> bytes:
         match = re.search(VARIABLE_PATTERN, content)
         while match:
-            match = re.search(VARIABLE_PATTERN, content)
             replace_what_begin = match.regs[0][0]
             replace_what_end = match.regs[0][1]
             replace_what = content[replace_what_begin:replace_what_end]
@@ -80,3 +79,16 @@ class TemplateEngine:
             match = re.search(VARIABLE_PATTERN, content)
         return content
 
+    def __handle_all_vars(self) -> None:
+        match = re.search(VARIABLE_PATTERN, self.__content)
+        while match:
+            match = re.search(VARIABLE_PATTERN, self.__content)
+            replace_what_begin = match.regs[0][0]
+            replace_what_end = match.regs[0][1]
+            replace_what = self.__content[replace_what_begin:replace_what_end]
+            var_name_begin = match.regs[1][0]
+            var_name_end = match.regs[1][1]
+            var_name = self.__content[var_name_begin:var_name_end]
+            replace_with = str(self.__context[var_name.decode('ascii')]).encode('utf-8')
+            self.__content = self.__content.replace(replace_what, replace_with)
+            match = re.search(VARIABLE_PATTERN, self.__content)

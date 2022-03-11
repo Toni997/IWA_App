@@ -95,3 +95,15 @@ form > * {
 .copyright {
     text-align: center;
 }
+
+.error {
+    color: #ff0000;
+}
+
+.link {
+    color: #006280;
+}
+
+.link:hover {
+    text-decoration: underline;
+}

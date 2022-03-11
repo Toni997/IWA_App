@@ -91,3 +91,7 @@ class HttpRequest:
 
     def get_body_len(self) -> int:
         return len(self.__body)
+
+    def get_method(self) -> bytes:
+        return self.__header[b'Method']
+

@@ -18,6 +18,7 @@ CRLF = b"\r\n"
 
 def handle_request(c: socket):
     req = HttpRequest(c)
+    method = req.get_method()
 
     match req.get_path():
         case b'/favicon.ico':
@@ -28,8 +29,18 @@ def handle_request(c: socket):
             views.get_javascript(c)
         case b'/':
             views.get_home_page(c, req.get_cookies())
+        case b'/login':
+            match method:
+                case b'GET':
+                    views.get_login_page(c, req.get_cookies())
+                case b'POST':
+                    views.post_login_page(c, req.get_multipart_data())
         case b'/signup':
-            views.get_signup_page(c, req.get_cookies())
+            match method:
+                case b'GET':
+                    views.get_signup_page(c, req.get_cookies())
+                case b'POST':
+                    views.post_signup_page(c, req.get_multipart_data())
         case b'/image/add':
             views.post_image(c)
         case b'/collection/add':
