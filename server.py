@@ -1,6 +1,7 @@
 import socket
 import threading
 import os
+from http.cookies import SimpleCookie
 
 from http_request import HttpRequest
 import views
@@ -34,19 +35,17 @@ def handle_request(c: socket):
                 case b'GET':
                     views.get_login_page(c, req.get_cookies())
                 case b'POST':
-                    views.post_login_page(c, req.get_multipart_data())
+                    views.post_login_page(c, req.get_cookies(), req.get_multipart_data())
         case b'/signup':
             match method:
                 case b'GET':
                     views.get_signup_page(c, req.get_cookies())
                 case b'POST':
-                    views.post_signup_page(c, req.get_multipart_data())
+                    views.post_signup_page(c, req.get_cookies(), req.get_multipart_data())
         case b'/image/add':
-            views.post_image(c)
+            views.post_image(c,  req.get_multipart_data())
         case b'/collection/add':
-            multipart_data = req.get_multipart_data()
-            name = multipart_data.get('collection-name')[0]
-            views.post_collection(c, name)
+            views.post_collection(c, req.get_multipart_data())
         case b'/404.png':
             views.get_error_image(c)
         case _:

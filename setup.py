@@ -16,20 +16,22 @@ TABLES['users'] = """
       PRIMARY KEY (`user_id`),
       UNIQUE KEY `username_UNIQUE` (`username`),
       UNIQUE KEY `email_UNIQUE` (`email`)
-    ) ENGINE=InnoDB
+    ) ENGINE=InnoDB;
 
     """
 
 TABLES['sessions'] = """
 
     CREATE TABLE `sessions` (
-      `session_id` int NOT NULL,
+      `session_id` int NOT NULL AUTO_INCREMENT,
+      `session_hash` char(64) DEFAULT NULL,
       `user_id` int NOT NULL,
       `valid_until` timestamp NULL DEFAULT NULL,
       PRIMARY KEY (`session_id`),
+      UNIQUE KEY `session__UNIQUE` (`session_hash`),
       KEY `user_id_idx` (`user_id`),
       CONSTRAINT `user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE RESTRICT
-    ) ENGINE=InnoDB
+    ) ENGINE=InnoDB;
 
     """
 

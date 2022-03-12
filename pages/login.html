@@ -2,7 +2,7 @@
 {% include header.html %}
     <div class="container">
         <h2>Login</h2>
-        <form id="login-form" method="POST" action="/signup" enctype="multipart/form-data">
+        <form id="login-form" method="POST" action="/login" enctype="multipart/form-data">
             <label for="username">Username: </label>
             <input type="text" name="username" id="username" minlength="3"
                    pattern="^(?=[a-zA-Z0-9._]{3,45}$)(?!.*[_.]{2})[^_.].*[^_.]$" required>

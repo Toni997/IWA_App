@@ -53,8 +53,7 @@ class HttpRequest:
         self.__cookies = self.__header.get(b'Cookie')
         if not self.__cookies:
             return
-        self.cookies = SimpleCookie()
-        self.cookies.load(self.__cookies.decode('utf-8'))
+        self.__cookies = SimpleCookie(self.__cookies.decode())
 
     def get_header(self) -> dict | None:
         return self.__header
