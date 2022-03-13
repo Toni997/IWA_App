@@ -1,10 +1,7 @@
 import socket
 import threading
 import os
-from http.cookies import SimpleCookie
 
-from http_request import HttpRequest
-import views
 from request_handler import handle_request
 
 HOST = '127.0.0.1'

@@ -9,8 +9,8 @@ import views
 
 def handle_request(c: socket):
     req = HttpRequest(c)
-    if not req.get_path():
-        print(req.get_header())
+    if not req.get_header():
+        return
     method = req.get_method()
     paths = req.get_path().split(b'/')
 
@@ -61,8 +61,6 @@ def handle_request(c: socket):
                     views.get_signup_page(c, req.get_cookies())
                 case b'POST':
                     views.post_signup_page(c, req.get_cookies(), req.get_multipart_data())
-        case b'image/add':
-            views.post_image(c,  req.get_cookies(), req.get_multipart_data())
         case b'collections':
             views.post_collection(c, req.get_cookies(), req.get_multipart_data())
         case b'logout':

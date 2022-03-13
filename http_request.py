@@ -12,13 +12,16 @@ class HttpRequest:
         self.__cookies: SimpleCookie | None = None
         self.__multipart_data = None
 
-        self.__receive_all()
-        self.__parse_multipart()
-        self.__parse_cookies()
+        received_anything = self.__receive_all()
+        if received_anything:
+            self.__parse_multipart()
+            self.__parse_cookies()
 
-    def __receive_all(self):
+    def __receive_all(self) -> bool:
         # assuming header is not longer than 2048 bytes (fix later?)
         request = self.__client.recv(2048)
+        if not len(request):
+            return False
         self.__parse_request(request)
 
         content_length = self.get_content_length()
@@ -27,6 +30,7 @@ class HttpRequest:
             chunk = self.__client.recv(1024)
             self.concatenate_body(chunk)
             left_to_receive -= len(chunk)
+        return True
 
     def __parse_request(self, request) -> None:
         self.__header = request.split(b'\r\n\r\n', 1)

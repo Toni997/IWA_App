@@ -65,9 +65,6 @@ def send_file(client: socket, file_name: str, content_type: bytes,
     msg = b'HTTP/1.1 200 OK' + CRLF
     msg += b'Content-Type: ' + content_type + CRLF
     if cookies:
-        if cookies.get('sessId'):
-            cookies['sessId']['path'] = '/'
-            cookies['sessId']['httponly'] = 'HttpOnly'
         msg += cookies.output().encode() + CRLF
     msg += CRLF
     msg += bytes(TemplateEngine(file_name, context))
@@ -96,9 +93,6 @@ def redirect_to(client: socket, location: bytes, cookies: SimpleCookie = None) -
     msg = b"HTTP/1.1 302 Found" + CRLF
     msg += b"Content-Type: text/html" + CRLF
     if cookies:
-        if cookies.get('sessId'):
-            cookies['sessId']['path'] = '/'
-            cookies['sessId']['httponly'] = 'HttpOnly'
         msg += cookies.output().encode() + CRLF
     msg += b"Location: " + location + CRLF
     msg += CRLF
@@ -108,9 +102,9 @@ def redirect_to(client: socket, location: bytes, cookies: SimpleCookie = None) -
 
 def bad_request(client: socket) -> None:
     msg = b"HTTP/1.1 400 Bad Request" + CRLF
-    msg += b"Content-Type: text/html" + CRLF
+    msg += b"Content-Type: text/plain" + CRLF
     msg += CRLF
-    msg += b"<h1>Error: Bad Request</h1>"
+    msg += b"Error: Bad Request"
     client.send(msg)
 
 
@@ -130,7 +124,7 @@ def get_error_page(client: socket, cookies: SimpleCookie) -> None:
     user = db_users.get_one_with_session_hash(cookies['sessId'].value)
     context = dict()
     context['logged_in'] = True if user else False
-    context['is_admin'] = True if user['is_admin'] else False
+    context['is_admin'] = True if user and user['is_admin'] else False
     context['username'] = '' if not user else user['username']
     context['page_title'] = 'Error 404'
     send_file(client, 'pages/404.html', b'text/html', cookies=None, context=context)
@@ -141,29 +135,32 @@ def get_error_image(client: socket) -> None:
 
 
 @account_required()
-def get_home_page(client: socket, cookies: SimpleCookie, multipart_data: dict = None, user: dict = None) -> None:
+def get_home_page(client: socket, cookies: SimpleCookie,
+                  multipart_data: dict = None, user: dict = None) -> None:
     context = dict()
     context['collections'] = db_collections.get_all()
     context['username'] = user['username']
     context['logged_in'] = True
     context['is_admin'] = user['is_admin']
     context['page_title'] = 'Home'
-    send_file(client, 'pages/index.html', b'text/html', cookies, context)
+    send_file(client, 'pages/index.html', b'text/html', None, context)
 
 
 @account_required(admin_required=True)
-def get_images_page(client: socket, cookies: SimpleCookie, multipart_data: dict = None, user: dict = None) -> None:
+def get_images_page(client: socket, cookies: SimpleCookie,
+                    multipart_data: dict = None, user: dict = None) -> None:
     context = dict()
     context['images'] = db_images.get_all()
     context['username'] = user['username']
     context['logged_in'] = True
     context['is_admin'] = user['is_admin']
     context['page_title'] = 'Images'
-    send_file(client, 'pages/images-table.html', b'text/html', cookies, context)
+    send_file(client, 'pages/images-table.html', b'text/html', None, context)
 
 
 @account_required()
-def get_images_json(client: socket, cookies: SimpleCookie, multipart_data: dict = None, user: dict = None) -> None:
+def get_images_json(client: socket, cookies: SimpleCookie,
+                    multipart_data: dict = None, user: dict = None) -> None:
     collections = db_collections.get_all()
     dict_to_send = dict()
     for collection in collections:
@@ -172,7 +169,8 @@ def get_images_json(client: socket, cookies: SimpleCookie, multipart_data: dict 
 
 
 @account_required()
-def get_image(client: socket, cookies: SimpleCookie = None, multipart_data: dict = None, user: dict = None,
+def get_image(client: socket, cookies: SimpleCookie = None,
+              multipart_data: dict = None, user: dict = None,
               image_id: int = None):
     image = db_images.get_one(image_id)
     if not image:
@@ -206,6 +204,7 @@ def get_image_details(client: socket, cookies: SimpleCookie = None,
     viewed = json.dumps(viewed, default=default_converter)
     expires = datetime.datetime.utcnow() + datetime.timedelta(days=365)
     expires = expires.strftime('%a, %d %b %Y %H:%M:%S GMT')
+    cookies = SimpleCookie()
     cookies['viewed'] = viewed
     cookies['viewed']['expires'] = expires
     cookies['viewed']['path'] = '/'
@@ -227,13 +226,14 @@ def delete_image(client: socket, cookies: SimpleCookie = None,
     context = dict()
     image_exists = db_images.get_one(image_id)
     if not image_exists:
-        return redirect_to(client, b'/images/' + str(image_id).encode() + b'/details', cookies)
+        return redirect_to(client, b'/images/' + str(image_id).encode() + b'/details')
     db_images.delete_one(image_id)
-    redirect_to(client, b'/', cookies)
+    redirect_to(client, b'/')
 
 
 @account_required()
-def post_images_page(client: socket, cookies: SimpleCookie, multipart_data: dict = None, user: dict = None) -> None:
+def post_images_page(client: socket, cookies: SimpleCookie,
+                     multipart_data: dict = None, user: dict = None) -> None:
     collection_id = multipart_data.get('selected-collection')
     image_contents = multipart_data.get('fimg')
     if not image_contents or not collection_id:
@@ -242,7 +242,7 @@ def post_images_page(client: socket, cookies: SimpleCookie, multipart_data: dict
     image_contents = image_contents[0]
     collection = db_collections.get_one(collection_id)
     if not collection:
-        return redirect_to(client, b'/', cookies)
+        return redirect_to(client, b'/')
     file_io = BytesIO(image_contents)
     directory = os.path.join(db_collections.COLLECTIONS_DIR, collection['name'])
     if not os.path.exists(directory):
@@ -250,7 +250,7 @@ def post_images_page(client: socket, cookies: SimpleCookie, multipart_data: dict
     file_name = os.urandom(16).hex()
     file_type = imghdr.what(file_io)
     if file_type not in db_images.ALLOWED_FILE_TYPES:
-        return redirect_to(client, b'/', cookies)
+        return redirect_to(client, b'/')
     full_path = os.path.join(directory, file_name + '.' + file_type).replace("\\", "/")
     try:
         with open(full_path, 'wb') as file:
@@ -258,69 +258,90 @@ def post_images_page(client: socket, cookies: SimpleCookie, multipart_data: dict
         db_images.insert_one(full_path.replace("\\", "/"), collection_id)
     except:
         print("Couldn't write to file.")
-    redirect_to(client, b'/', cookies)
+    redirect_to(client, b'/')
 
 
 @account_required()
-def get_settings_page(client: socket, cookies: SimpleCookie, multipart_data: dict = None, user: dict = None) -> None:
+def get_settings_page(client: socket, cookies: SimpleCookie,
+                      multipart_data: dict = None, user: dict = None) -> None:
     context = dict()
     context['page_title'] = 'Settings'
     context['username'] = user['username']
     context['logged_in'] = True
     context['is_admin'] = user['is_admin']
-    send_file(client, 'pages/settings.html', b'text/html', cookies, context)
+    send_file(client, 'pages/settings.html', b'text/html', None, context)
 
 
 @account_required()
-def post_settings_page(client: socket, cookies: SimpleCookie, multipart_data: dict = None, user: dict = None) -> None:
-    new_password = multipart_data.get('new-password')[0]
-    repeat_new_password = multipart_data.get('repeat-new-password')[0]
+def post_settings_page(client: socket, cookies: SimpleCookie,
+                       multipart_data: dict = None, user: dict = None) -> None:
+    old_password = multipart_data.get('old-password')
+    new_password = multipart_data.get('new-password')
+    repeat_new_password = multipart_data.get('repeat-new-password')
+    if not old_password or not new_password or not repeat_new_password \
+            or not isinstance(old_password, list) \
+            or not isinstance(new_password, list) \
+            or not isinstance(repeat_new_password, list):
+        return bad_request(client)
+    old_password = old_password[0]
+    new_password = new_password[0]
+    repeat_new_password = repeat_new_password[0]
+
     if len(new_password) < 8 or repeat_new_password != new_password:
-        redirect_to(client, b'/settings', cookies)
+        return bad_request(client)
 
     user = db_users.get_one_with_session_hash(cookies.get('sessId').coded_value)
     salt = bytes.fromhex(user['salt'])
     pw_hash = bytes.fromhex(user['password_hash'])
-    old_password = multipart_data.get('old-password')[0]
     if not hashing.is_correct_password(salt, pw_hash, old_password):
-        redirect_to(client, b'/settings', cookies)
+        return redirect_to(client, b'/settings')
 
     new_salt, new_pw_hash = hashing.hash_new_password(new_password)
     user_id = user['user_id']
     db_users.update_password(user_id, new_salt, new_pw_hash)
-    redirect_to(client, b'/settings', cookies)
+    redirect_to(client, b'/settings')
 
 
 @redirect_if_logged_in
-def get_signup_page(client: socket, cookies: SimpleCookie, multipart_data: dict = None) -> None:
+def get_signup_page(client: socket, cookies: SimpleCookie,
+                    multipart_data: dict = None) -> None:
     context = dict()
     context['username'] = ''
     context['logged_in'] = False
     context['is_admin'] = False
     context['page_title'] = 'Sign Up'
-    send_file(client, 'pages/signup.html', b'text/html', cookies, context)
+    send_file(client, 'pages/signup.html', b'text/html', None, context)
 
 
 @redirect_if_logged_in
-def get_login_page(client: socket, cookies: SimpleCookie, multipart_data: dict = None) -> None:
+def get_login_page(client: socket, cookies: SimpleCookie,
+                   multipart_data: dict = None) -> None:
     context = dict()
     context['username'] = ''
     context['logged_in'] = False
     context['is_admin'] = False
     context['page_title'] = 'Log In'
-    send_file(client, 'pages/login.html', b'text/html', cookies, context)
+    send_file(client, 'pages/login.html', b'text/html', None, context)
 
 
 @redirect_if_logged_in
-def post_login_page(client: socket, cookies: SimpleCookie = None, multipart_data: dict = None) -> None:
-    username = multipart_data['username'][0]
+def post_login_page(client: socket, cookies: SimpleCookie = None,
+                    multipart_data: dict = None) -> None:
+    username = multipart_data.get('username')
+    password = multipart_data.get('password')
+    if not username or not password \
+            or not isinstance(username, list) \
+            or not isinstance(password, list):
+        return bad_request(client)
+    username = username[0]
+    password = password[0]
+
     user = db_users.get_one_with_username(username)
     if not user:
         return redirect_to(client, b'/login')
 
     salt = bytes.fromhex(user['salt'])
     pw_hash = bytes.fromhex(user['password_hash'])
-    password = multipart_data['password'][0]
     if not hashing.is_correct_password(salt, pw_hash, password):
         return redirect_to(client, b'/login')
 
@@ -335,12 +356,25 @@ def post_login_page(client: socket, cookies: SimpleCookie = None, multipart_data
     redirect_to(client, b'/', cookies)
 
 
-def post_signup_page(client: socket, cookies: SimpleCookie = None, multipart_data: dict = None) -> None:
-    email = multipart_data['email'][0]
+def post_signup_page(client: socket, cookies: SimpleCookie = None,
+                     multipart_data: dict = None) -> None:
+    email = multipart_data.get('email')
+    username = multipart_data.get('username')
+    password = multipart_data.get('password')
+    repeat_password = multipart_data.get('repeat-password')
+    if not email or not username or not password or not repeat_password \
+            or not isinstance(email, list) \
+            or not isinstance(username, list) \
+            or not isinstance(password, list) \
+            or not isinstance(repeat_password, list):
+        return bad_request(client)
+    email = email[0]
+    username = username[0]
+    password = password[0]
+    repeat_password = repeat_password[0]
     if not re.match(db_users.EMAIL_PATTERN, email):
         return redirect_to(client, b'/signup')
 
-    username = multipart_data['username'][0]
     if not re.match(db_users.USERNAME_PATTERN, username):
         return redirect_to(client, b'/signup')
 
@@ -348,8 +382,6 @@ def post_signup_page(client: socket, cookies: SimpleCookie = None, multipart_dat
     if user_exists:
         return redirect_to(client, b'/signup')
 
-    password = multipart_data['password'][0]
-    repeat_password = multipart_data['repeat-password'][0]
     if len(password) >= 8 and password != repeat_password:
         return redirect_to(client, b'/signup')
 
@@ -360,25 +392,21 @@ def post_signup_page(client: socket, cookies: SimpleCookie = None, multipart_dat
 
 
 @account_required()
-def post_image(client: socket, cookies: SimpleCookie = None, multipart_data: dict = None, user: dict = None) -> None:
-    # TODO process post request
-    redirect_to(client, b'/', cookies)
-
-
-@account_required()
-def post_collection(client: socket, cookies: SimpleCookie = None, multipart_data: dict = None, user: dict = None) -> None:
+def post_collection(client: socket, cookies: SimpleCookie = None,
+                    multipart_data: dict = None, user: dict = None) -> None:
     name = multipart_data.get('collection-name')
     if name:
         name = name[0]
         if name.strip():
             db_collections.insert_one(name)
 
-    redirect_to(client, b'/', cookies)
+    redirect_to(client, b'/')
 
 
 @account_required()
-def post_logout(client: socket, cookies: SimpleCookie = None, multipart_data: dict = None, user: dict = None) -> None:
+def post_logout(client: socket, cookies: SimpleCookie = None,
+                multipart_data: dict = None, user: dict = None) -> None:
     session_hash = cookies['sessId'].coded_value
     db_sessions.delete_one(session_hash)
 
-    redirect_to(client, b'/login', cookies)
+    redirect_to(client, b'/login')
