@@ -22,7 +22,7 @@ def get_one_with_username(username: str):
 
 def get_one_with_session_hash(session_hash: str):
     cursor.execute(f"""
-                    SELECT users.user_id, users.salt, users.password_hash
+                    SELECT users.user_id, users.username, users.is_admin, users.salt, users.password_hash
                     FROM users
                     INNER JOIN sessions
                     ON users.user_id = sessions.user_id

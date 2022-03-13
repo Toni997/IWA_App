@@ -1,14 +1,25 @@
 <body>
     <header>
         <a href="/">
-            <h1 title="Go Home">IWA App</h1>
+            <h1 class="text-center" title="Go Home">IWA App</h1>
         </a>
+        {% if logged_in %}
+        <br /><h3 class="text-center">Hi, {{ username }}</h3>
+        {% else %}
+        <br /><h3 class="text-center">You are not logged in</h3>
+        {% end if %}
         <nav>
-            <a href="/login">Log in</a>
-            <a href="/signup">Sign up</a>
+            {% if is_admin %}
             <a href="/images">Images</a>
+            {% else %}
+            {% end if %}
+            {% if logged_in %}
             <a href="/settings">Settings</a>
             <a href="/logout" onclick="return confirm('Are you sure?')">Log Out</a>
+            {% else %}
+            <a href="/login">Log in</a>
+            <a href="/signup">Sign up</a>
+            {% end if %}
         </nav>
     </header>
     <hr />

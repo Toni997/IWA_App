@@ -37,7 +37,7 @@ def account_required(admin_required: bool = False):
                     is_admin = user['is_admin']
                     if not is_admin:
                         return redirect_to(client, b'/login', cookies)
-                return func(client, cookies, multipart_data, *args)
+                return func(client, cookies, multipart_data, user, *args)
             return redirect_to(client, b'/login', cookies)
         return wrapper
     return login_required
@@ -126,8 +126,12 @@ def get_javascript(client: socket) -> None:
     send_file(client, 'static/script.js', b'text/javascript')
 
 
-def get_error_page(client: socket) -> None:
+def get_error_page(client: socket, cookies: SimpleCookie) -> None:
+    user = db_users.get_one_with_session_hash(cookies['sessId'].value)
     context = dict()
+    context['logged_in'] = True if user else False
+    context['is_admin'] = True if user['is_admin'] else False
+    context['username'] = '' if not user else user['username']
     context['page_title'] = 'Error 404'
     send_file(client, 'pages/404.html', b'text/html', cookies=None, context=context)
 
@@ -137,23 +141,29 @@ def get_error_image(client: socket) -> None:
 
 
 @account_required()
-def get_home_page(client: socket, cookies: SimpleCookie, multipart_data: dict = None) -> None:
+def get_home_page(client: socket, cookies: SimpleCookie, multipart_data: dict = None, user: dict = None) -> None:
     context = dict()
     context['collections'] = db_collections.get_all()
+    context['username'] = user['username']
+    context['logged_in'] = True
+    context['is_admin'] = user['is_admin']
     context['page_title'] = 'Home'
     send_file(client, 'pages/index.html', b'text/html', cookies, context)
 
 
 @account_required(admin_required=True)
-def get_images_page(client: socket, cookies: SimpleCookie, multipart_data: dict = None) -> None:
+def get_images_page(client: socket, cookies: SimpleCookie, multipart_data: dict = None, user: dict = None) -> None:
     context = dict()
     context['images'] = db_images.get_all()
+    context['username'] = user['username']
+    context['logged_in'] = True
+    context['is_admin'] = user['is_admin']
     context['page_title'] = 'Images'
     send_file(client, 'pages/images-table.html', b'text/html', cookies, context)
 
 
 @account_required()
-def get_images_json(client: socket, cookies: SimpleCookie, multipart_data: dict = None) -> None:
+def get_images_json(client: socket, cookies: SimpleCookie, multipart_data: dict = None, user: dict = None) -> None:
     collections = db_collections.get_all()
     dict_to_send = dict()
     for collection in collections:
@@ -162,7 +172,8 @@ def get_images_json(client: socket, cookies: SimpleCookie, multipart_data: dict 
 
 
 @account_required()
-def get_image(client: socket, cookies: SimpleCookie = None, multipart_data: dict = None, image_id: int = None):
+def get_image(client: socket, cookies: SimpleCookie = None, multipart_data: dict = None, user: dict = None,
+              image_id: int = None):
     image = db_images.get_one(image_id)
     if not image:
         return redirect_to(client, b'/')
@@ -172,7 +183,7 @@ def get_image(client: socket, cookies: SimpleCookie = None, multipart_data: dict
 
 @account_required()
 def get_image_details(client: socket, cookies: SimpleCookie = None,
-                      multipart_data: dict = None, image_id: int = None) -> None:
+                      multipart_data: dict = None, user: dict = None, image_id: int = None) -> None:
     now = datetime.datetime.now()
     now_str = now.__str__()
     viewed_cookies = cookies.get('viewed')
@@ -203,13 +214,16 @@ def get_image_details(client: socket, cookies: SimpleCookie = None,
     context['image_id'] = image_details['image_id']
     context['counter'] = image_details['counter']
     context['path'] = image_details['path']
+    context['username'] = user['username']
+    context['logged_in'] = True
+    context['is_admin'] = user['is_admin']
     context['page_title'] = 'Image Details'
     send_file(client, 'pages/image-details.html', b'text/html', cookies, context)
 
 
 @account_required(admin_required=True)
 def delete_image(client: socket, cookies: SimpleCookie = None,
-                 multipart_data: dict = None, image_id: int = None) -> None:
+                 multipart_data: dict = None, user: dict = None, image_id: int = None) -> None:
     context = dict()
     image_exists = db_images.get_one(image_id)
     if not image_exists:
@@ -219,7 +233,7 @@ def delete_image(client: socket, cookies: SimpleCookie = None,
 
 
 @account_required()
-def post_images_page(client: socket, cookies: SimpleCookie, multipart_data: dict = None) -> None:
+def post_images_page(client: socket, cookies: SimpleCookie, multipart_data: dict = None, user: dict = None) -> None:
     collection_id = multipart_data.get('selected-collection')
     image_contents = multipart_data.get('fimg')
     if not image_contents or not collection_id:
@@ -248,14 +262,17 @@ def post_images_page(client: socket, cookies: SimpleCookie, multipart_data: dict
 
 
 @account_required()
-def get_settings_page(client: socket, cookies: SimpleCookie, multipart_data: dict = None) -> None:
+def get_settings_page(client: socket, cookies: SimpleCookie, multipart_data: dict = None, user: dict = None) -> None:
     context = dict()
     context['page_title'] = 'Settings'
+    context['username'] = user['username']
+    context['logged_in'] = True
+    context['is_admin'] = user['is_admin']
     send_file(client, 'pages/settings.html', b'text/html', cookies, context)
 
 
 @account_required()
-def post_settings_page(client: socket, cookies: SimpleCookie, multipart_data: dict = None) -> None:
+def post_settings_page(client: socket, cookies: SimpleCookie, multipart_data: dict = None, user: dict = None) -> None:
     new_password = multipart_data.get('new-password')[0]
     repeat_new_password = multipart_data.get('repeat-new-password')[0]
     if len(new_password) < 8 or repeat_new_password != new_password:
@@ -271,11 +288,15 @@ def post_settings_page(client: socket, cookies: SimpleCookie, multipart_data: di
     new_salt, new_pw_hash = hashing.hash_new_password(new_password)
     user_id = user['user_id']
     db_users.update_password(user_id, new_salt, new_pw_hash)
+    redirect_to(client, b'/settings', cookies)
 
 
 @redirect_if_logged_in
 def get_signup_page(client: socket, cookies: SimpleCookie, multipart_data: dict = None) -> None:
     context = dict()
+    context['username'] = ''
+    context['logged_in'] = False
+    context['is_admin'] = False
     context['page_title'] = 'Sign Up'
     send_file(client, 'pages/signup.html', b'text/html', cookies, context)
 
@@ -283,6 +304,9 @@ def get_signup_page(client: socket, cookies: SimpleCookie, multipart_data: dict 
 @redirect_if_logged_in
 def get_login_page(client: socket, cookies: SimpleCookie, multipart_data: dict = None) -> None:
     context = dict()
+    context['username'] = ''
+    context['logged_in'] = False
+    context['is_admin'] = False
     context['page_title'] = 'Log In'
     send_file(client, 'pages/login.html', b'text/html', cookies, context)
 
@@ -336,13 +360,13 @@ def post_signup_page(client: socket, cookies: SimpleCookie = None, multipart_dat
 
 
 @account_required()
-def post_image(client: socket, cookies: SimpleCookie = None, multipart_data: dict = None) -> None:
+def post_image(client: socket, cookies: SimpleCookie = None, multipart_data: dict = None, user: dict = None) -> None:
     # TODO process post request
     redirect_to(client, b'/', cookies)
 
 
 @account_required()
-def post_collection(client: socket, cookies: SimpleCookie = None, multipart_data: dict = None) -> None:
+def post_collection(client: socket, cookies: SimpleCookie = None, multipart_data: dict = None, user: dict = None) -> None:
     name = multipart_data.get('collection-name')
     if name:
         name = name[0]
@@ -353,7 +377,7 @@ def post_collection(client: socket, cookies: SimpleCookie = None, multipart_data
 
 
 @account_required()
-def post_logout(client: socket, cookies: SimpleCookie = None, multipart_data: dict = None) -> None:
+def post_logout(client: socket, cookies: SimpleCookie = None, multipart_data: dict = None, user: dict = None) -> None:
     session_hash = cookies['sessId'].coded_value
     db_sessions.delete_one(session_hash)
 

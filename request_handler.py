@@ -70,4 +70,4 @@ def handle_request(c: socket):
         case b'404.png':
             views.get_error_image(c)
         case _:
-            views.get_error_page(c)
+            views.get_error_page(c, req.get_cookies())
