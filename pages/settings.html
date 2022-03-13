@@ -1,0 +1,19 @@
+{% include head.html %}
+{% include header.html %}
+    <div class="container">
+        <h2>Change Password</h2>
+        <form id="change-password-form" method="POST" action="/change-password" enctype="multipart/form-data">
+            <label for="old-password">Old Password: </label>
+            <input type="password" name="old-password" id="old-password" minlength="8" required>
+
+            <label for="new-password">New Password: </label>
+            <input type="password" name="new-password" id="new-password" minlength="8" required>
+
+            <label for="repeat-new-password">Repeat New Password: </label>
+            <input type="password" name="repeat-new-password" id="repeat-new-password" minlength="8" required>
+
+            <input type="submit" value="Update">
+            <span class="error"></span>
+        </form>
+    </div>
+{% include footer.html %}

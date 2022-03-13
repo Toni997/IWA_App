@@ -77,6 +77,10 @@ input[type="submit"] {
     cursor: pointer;
 }
 
+input:disabled {
+    cursor: wait;
+}
+
 input:hover,
 select:hover {
     border: 1px solid #000;
@@ -106,4 +110,68 @@ form > * {
 
 .link:hover {
     text-decoration: underline;
+}
+
+table {
+    width: 100%;
+}
+
+table, td, th {
+  border: 1px solid #444;
+}
+
+th {
+    background-color: #fff;
+}
+
+tbody > tr {
+    transition: 0.3s;
+}
+
+tbody > tr:hover {
+    background-color: #444;
+    color: #eee;
+}
+
+td, th {
+    padding: 10px;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+#loaded-images img {
+    max-height: 400px;
+}
+
+#loaded-images {
+    overflow: auto;
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+.images-table {
+    overflow: auto;
+}
+
+.image-link-container {
+    margin-right: 15px;
+    overflow: hidden;
+    transition: 0.3s;
+    flex-shrink: 0;
+}
+
+.image-link-container img {
+    transition: 0.3s;
+}
+
+.image-link-container:hover img {
+    opacity: 0.7;
+    transform: scale(1.3);
+}
+
+.image-details-container img {
+    max-height: 600px;
+    max-width: 100%;
 }

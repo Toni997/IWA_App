@@ -12,12 +12,23 @@ def get_one(user_id: int) -> dict:
 
 def get_one_with_email_or_username(email: str, username: str):
     cursor.execute(f"SELECT * FROM users WHERE email = '{email}' OR username = '{username}'")
-    return cursor.fetchall()
+    return cursor.fetchone()
 
 
 def get_one_with_username(username: str):
     cursor.execute(f"SELECT * FROM users WHERE username = '{username}'")
-    return cursor.fetchall()
+    return cursor.fetchone()
+
+
+def get_one_with_session_hash(session_hash: str):
+    cursor.execute(f"""
+                    SELECT users.user_id, users.salt, users.password_hash
+                    FROM users
+                    INNER JOIN sessions
+                    ON users.user_id = sessions.user_id
+                    WHERE session_hash = '{session_hash}'
+                    """)
+    return cursor.fetchone()
 
 
 def insert_one(email: str, username: str, salt: str, pw_hash: str) -> None:
@@ -45,3 +56,20 @@ def insert_one(email: str, username: str, salt: str, pw_hash: str) -> None:
         print(f"Created user: {username}")
     except mysql.connector.Error as err:
         print(err.msg)
+
+
+def update_password(user_id: int, salt, pw_hash):
+    try:
+        cursor.execute(
+                    f"""
+                    UPDATE users
+                    SET salt = '{salt}', password_hash = '{pw_hash}'
+                    WHERE user_id = {user_id};
+                    """
+                    )
+        db.commit()
+
+        print(f"Updated user: {user_id}")
+    except mysql.connector.Error as err:
+        print(err.msg)
+

@@ -31,9 +31,10 @@ class HttpRequest:
     def __parse_request(self, request) -> None:
         self.__header = request.split(b'\r\n\r\n', 1)
         self.__body = self.__header[1] if len(self.__header) > 1 else b''
-        self.__header = self.__header[0].split(b'\r\n')
+        self.__header = self.__header[0]
+        self.__header = self.__header.split(b'\r\n')
         req = self.__header.pop(0).split()
-        self.__header = dict(x.split(b': ') for x in self.__header)
+        self.__header = dict(x.split(b': ', 1) for x in self.__header)
         if len(req) < 3:
             return
         self.__header[b'Method'] = req[0]
@@ -92,5 +93,5 @@ class HttpRequest:
         return len(self.__body)
 
     def get_method(self) -> bytes:
-        return self.__header[b'Method']
+        return self.__header.get(b'Method')
 

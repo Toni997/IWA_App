@@ -1,0 +1,16 @@
+{% include head.html %}
+{% include header.html %}
+    <div class="container">
+        <div class="image-details-container">
+            <img src="/images/{{ image_id }}" alt="image">
+        </div>
+        <p>
+            Total views: {{ counter }}
+        </p>
+        <div>
+            <form id="delete-image-form" method="POST" action="/images/{{ image_id }}">
+                <input type="submit" value="Delete">
+            </form>
+        </div>
+    </div>
+{% include footer.html %}

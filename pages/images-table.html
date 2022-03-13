@@ -1,0 +1,29 @@
+{% include head.html %}
+{% include header.html %}
+    <div class="container">
+        <div class="images-table">
+            <table>
+            <thead>
+                <tr>
+                    <th>Collection Name</th>
+                    <th>Path</th>
+                    <th>Created</th>
+                    <th>Last Visited</th>
+                    <th>Counter</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for image in images %}
+                <tr>
+                    <td>{{ image.name }}</td>
+                    <td>{{ image.path }}</td>
+                    <td>{{ image.created }}</td>
+                    <td>{{ image.last_visited }}</td>
+                    <td>{{ image.counter }}</td>
+                </tr>
+            {% end for %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+{% include footer.html %}

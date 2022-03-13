@@ -2,8 +2,8 @@
 {% include header.html %}
     <div class="container">
         <h2>Images</h2>
-        <form id="add-image-form" method="POST" action="/image/add" enctype="multipart/form-data">
-            <select class="collection" id="collection" name="selected-collection">
+        <form id="add-image-form" method="POST" action="/images" enctype="multipart/form-data">
+            <select class="collection" id="collection" name="selected-collection" required>
                 <option value="" selected disabled hidden>Choose collection</option>
                 {% for c in collections %}
                 <option value="{{ c.collection_id }}">{{ c.name }}</option>
@@ -11,15 +11,19 @@
             </select>
             Selected: <span id="selected-collection"></span>
 
-            <label for="fimg">Slika: </label>
-            <input type="file" name="fimg" id="fimg" accept="image/*">
+            <div id="loaded-images">
+                Select a collection to preview images.
+            </div>
 
-            <input type="submit" value="Upload">
+            <label for="fimg">Slika: </label>
+            <input type="file" name="fimg" id="fimg" accept="image/png, image/jpeg" required>
+
+            <input id="upload-button" type="submit" value="Upload">
         </form>
 
         <hr />
         <h2>Create new collection</h2>
-        <form id="add-collection-form" method="POST" action="/collection/add" enctype="multipart/form-data">
+        <form id="add-collection-form" method="POST" action="/collection" enctype="multipart/form-data">
             <label for="collection-name">Name: </label>
             <input type="text" name="collection-name" id="collection-name">
 
