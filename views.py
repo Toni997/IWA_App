@@ -65,6 +65,7 @@ def send_file(client: socket, file_name: str, content_type: bytes,
     msg = b'HTTP/1.1 200 OK' + CRLF
     msg += b'Content-Type: ' + content_type + CRLF
     if cookies:
+        print('sending file with:\n', cookies)
         msg += cookies.output().encode() + CRLF
     msg += CRLF
     msg += bytes(TemplateEngine(file_name, context))
@@ -93,6 +94,7 @@ def redirect_to(client: socket, location: bytes, cookies: SimpleCookie = None) -
     msg = b"HTTP/1.1 302 Found" + CRLF
     msg += b"Content-Type: text/html" + CRLF
     if cookies:
+        print('redirecting with:\n', cookies)
         msg += cookies.output().encode() + CRLF
     msg += b"Location: " + location + CRLF
     msg += CRLF
@@ -224,22 +226,24 @@ def get_image_details(client: socket, cookies: SimpleCookie = None,
 def delete_image(client: socket, cookies: SimpleCookie = None,
                  multipart_data: dict = None, user: dict = None, image_id: int = None) -> None:
     context = dict()
-    image_exists = db_images.get_one(image_id)
-    if not image_exists:
+    image = db_images.get_one(image_id)
+    if not image:
         return redirect_to(client, b'/images/' + str(image_id).encode() + b'/details')
     db_images.delete_one(image_id)
+    if os.path.exists(image['path']):
+        os.remove(image['path'])
     redirect_to(client, b'/')
 
 
 @account_required()
 def post_images_page(client: socket, cookies: SimpleCookie,
                      multipart_data: dict = None, user: dict = None) -> None:
-    collection_id = multipart_data.get('selected-collection')
-    image_contents = multipart_data.get('fimg')
-    if not image_contents or not collection_id:
+    try:
+        collection_id = int(multipart_data['selected-collection'][0])
+        image_contents = multipart_data['fimg'][0]
+    except KeyError:
         return bad_request(client)
-    collection_id = int(collection_id[0])
-    image_contents = image_contents[0]
+
     collection = db_collections.get_one(collection_id)
     if not collection:
         return redirect_to(client, b'/')
@@ -275,17 +279,12 @@ def get_settings_page(client: socket, cookies: SimpleCookie,
 @account_required()
 def post_settings_page(client: socket, cookies: SimpleCookie,
                        multipart_data: dict = None, user: dict = None) -> None:
-    old_password = multipart_data.get('old-password')
-    new_password = multipart_data.get('new-password')
-    repeat_new_password = multipart_data.get('repeat-new-password')
-    if not old_password or not new_password or not repeat_new_password \
-            or not isinstance(old_password, list) \
-            or not isinstance(new_password, list) \
-            or not isinstance(repeat_new_password, list):
+    try:
+        old_password = multipart_data['old-password'][0]
+        new_password = multipart_data['new-password'][0]
+        repeat_new_password = multipart_data['repeat-new-password'][0]
+    except KeyError:
         return bad_request(client)
-    old_password = old_password[0]
-    new_password = new_password[0]
-    repeat_new_password = repeat_new_password[0]
 
     if len(new_password) < 8 or repeat_new_password != new_password:
         return bad_request(client)
@@ -327,14 +326,11 @@ def get_login_page(client: socket, cookies: SimpleCookie,
 @redirect_if_logged_in
 def post_login_page(client: socket, cookies: SimpleCookie = None,
                     multipart_data: dict = None) -> None:
-    username = multipart_data.get('username')
-    password = multipart_data.get('password')
-    if not username or not password \
-            or not isinstance(username, list) \
-            or not isinstance(password, list):
+    try:
+        username = multipart_data['username'][0]
+        password = multipart_data['password'][0]
+    except KeyError:
         return bad_request(client)
-    username = username[0]
-    password = password[0]
 
     user = db_users.get_one_with_username(username)
     if not user:
@@ -358,20 +354,14 @@ def post_login_page(client: socket, cookies: SimpleCookie = None,
 
 def post_signup_page(client: socket, cookies: SimpleCookie = None,
                      multipart_data: dict = None) -> None:
-    email = multipart_data.get('email')
-    username = multipart_data.get('username')
-    password = multipart_data.get('password')
-    repeat_password = multipart_data.get('repeat-password')
-    if not email or not username or not password or not repeat_password \
-            or not isinstance(email, list) \
-            or not isinstance(username, list) \
-            or not isinstance(password, list) \
-            or not isinstance(repeat_password, list):
+    try:
+        email = multipart_data['email'][0]
+        username = multipart_data['username'][0]
+        password = multipart_data['password'][0]
+        repeat_password = multipart_data['repeat-password'][0]
+    except KeyError:
         return bad_request(client)
-    email = email[0]
-    username = username[0]
-    password = password[0]
-    repeat_password = repeat_password[0]
+
     if not re.match(db_users.EMAIL_PATTERN, email):
         return redirect_to(client, b'/signup')
 
@@ -409,4 +399,4 @@ def post_logout(client: socket, cookies: SimpleCookie = None,
     session_hash = cookies['sessId'].coded_value
     db_sessions.delete_one(session_hash)
 
-    redirect_to(client, b'/login')
+    redirect_to(client, b'/login', None)
